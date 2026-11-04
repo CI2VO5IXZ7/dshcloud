@@ -46,7 +46,8 @@ const EnvSchema = z.object({
    * **为什么不是 127.0.0.1**：本地开发里 Traefik 跑在容器、控制面跑在宿主。
    * Docker Desktop 上 `host.docker.internal` 能摸到宿主回环；Linux 的 host-gateway
    *（如 `172.17.0.1`）**到不了**宿主 loopback —— 绑 `127.0.0.1` 时容器侧 forward-auth
-   * / 控制台代理会连不上。需要更严时再显式设回 `127.0.0.1`（仅 Docker Desktop / 同宿主
+   * / 控制台代理会连不上。workspace-gateway 共用此绑定（Traefik →
+   * `host.docker.internal:gatewayPort`）。需要更严时再显式设回 `127.0.0.1`（仅 Docker Desktop / 同宿主
    * 反代场景）。见 docs/FORK.md。
    */
   CONTROL_PLANE_LISTEN_HOST: z.string().min(1).default('0.0.0.0'),

@@ -83,9 +83,13 @@ const credentialCleanup = setInterval(() => {
   void deleteExpiredWorkspaceAccess(db).catch(() => console.error('Workspace credential cleanup failed'))
 }, 60_000)
 credentialCleanup.unref()
+// workspace-gateway 与控制面共用 `CONTROL_PLANE_LISTEN_HOST`（默认 0.0.0.0）。
+// Traefik 经 host.docker.internal:gatewayPort 反代到这里；Linux host-gateway 摸不到
+// 宿主 loopback，硬绑 127.0.0.1 会让实例工作空间 502。Docker Desktop 可改回 127.0.0.1。
+// 勿与实例内 dsh `web --host`（保持 127.0.0.1）混淆——那是容器内回环，不是这条宿主绑定。
 await new Promise<void>((resolve, reject) => {
   gateway.once('error', reject)
-  gateway.listen(0, '127.0.0.1', resolve)
+  gateway.listen(0, env.CONTROL_PLANE_LISTEN_HOST, resolve)
 })
 const gatewayPort = (gateway.address() as import('node:net').AddressInfo).port
 

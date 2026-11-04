@@ -14,6 +14,7 @@
 因此默认：
 
 - 控制面：`CONTROL_PLANE_LISTEN_HOST=0.0.0.0`（见 `apps/server/src/env.ts`）
+- workspace-gateway：同一 `CONTROL_PLANE_LISTEN_HOST`（Traefik → `host.docker.internal:gatewayPort`）。勿与实例内 dsh `web --host`（保持 `127.0.0.1`）混淆
 - Vite：`server.host = 0.0.0.0`（可用 `VITE_DEV_SERVER_HOST` 覆盖）
 
 仅在 Docker Desktop、或反代与控制面同宿主且只走回环时，可改回 `127.0.0.1`。
