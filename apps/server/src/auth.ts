@@ -71,6 +71,11 @@ export function createAuth(env: Env, db: Db, _opts: { bootstrap?: boolean } = {}
         sameSite: 'lax',
         path: '/',
       },
+      // 只认桥接层写入的那一个头。默认列表今天也只有 x-forwarded-for，
+      // 但库若把 cf-connecting-ip 加回去，伪造头又能拆桶。不要关掉 IP 追踪。
+      ipAddress: {
+        ipAddressHeaders: ['x-forwarded-for'],
+      },
     },
   })
 }

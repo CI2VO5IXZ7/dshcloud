@@ -57,20 +57,31 @@ describe('引导态下的认证', () => {
         storage: 'memory',
       })
       expect(context.rateLimit.customRules?.['/sign-in/*']).toEqual({ window: 60, max: 10 })
+      // 锁死只读这一个头。不设的话，缺头在 test 里会落到 127.0.0.1，测的是兜底不是限速。
+      expect(context.options.advanced?.ipAddress).toEqual({
+        ipAddressHeaders: ['x-forwarded-for'],
+      })
 
       // 打到登录前缀但不是真登录：限速在进路由之前计数，不必连数据库。
-      const signIn = () =>
+      // 地址必须写在头上。不写的话 NODE_ENV=test 会把所有请求收成 127.0.0.1，空头也能“通过”。
+      const ip = '203.0.113.10'
+      const signIn = (address: string) =>
         auth.handler(
           new Request('https://console.app.example.com/api/auth/sign-in/rate-limit-probe', {
             method: 'POST',
-            headers: { origin: 'https://console.app.example.com' },
+            headers: {
+              origin: 'https://console.app.example.com',
+              'x-forwarded-for': address,
+            },
           }),
         )
 
       for (let i = 0; i < 10; i++) {
-        expect((await signIn()).status).not.toBe(429)
+        expect((await signIn(ip)).status).not.toBe(429)
       }
-      expect((await signIn()).status).toBe(429)
+      expect((await signIn(ip)).status).toBe(429)
+      // 另一只地址还有额度，说明桶是按这个头分的，不是测试环境的共享兜底。
+      expect((await signIn('203.0.113.11')).status).not.toBe(429)
     } finally { await client.end() }
   })
 
